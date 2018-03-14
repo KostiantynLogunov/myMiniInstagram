@@ -10,6 +10,7 @@ use yii\bootstrap\ActiveForm;
 $this->title = 'Login';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <div class="site-login">
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -34,6 +35,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
 
             <?php ActiveForm::end(); ?>
+        </div>
+        <div class="col-lg-5">
+            <h3>Login with facebook</h3>
+            <?= yii\authclient\widgets\AuthChoice::widget([
+                'baseAuthUrl' => ['site/auth'],
+                'popupMode' => false,
+            ]) ?>
+            <!--<div
+                    class="fb-like"
+                    data-share="true"
+                    data-width="450"
+                    data-show-faces="true">
+            </div>-->
         </div>
     </div>
 </div>
