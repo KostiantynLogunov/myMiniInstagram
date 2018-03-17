@@ -1,7 +1,7 @@
 <?php
 namespace app\components;
 
-use frontend\models\Auth;
+use frontend\modules\user\models\Auth;
 use frontend\models\User;
 use Yii;
 use yii\authclient\ClientInterface;
@@ -31,6 +31,7 @@ class AuthHandler
         $attributes = $this->client->getUserAttributes();
 
         $auth = $this->findAuth($attributes);
+
         if ($auth) {
             $user = $auth->user;
             return Yii::$app->user->login($user);
@@ -91,18 +92,5 @@ class AuthHandler
             'source' => $this->client->getId(),
             'source_id' => $sourceId,
         ]);
-    }
-
-    /**
-     * @param User $user
-     */
-    private function updateUserInfo(User $user)
-    {
-        $attributes = $this->client->getUserAttributes();
-        $github = ArrayHelper::getValue($attributes, 'login');
-        if ($user->github === null && $github) {
-            $user->github = $github;
-            $user->save();
-        }
     }
 }
