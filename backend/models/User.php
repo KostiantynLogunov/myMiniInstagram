@@ -1,10 +1,11 @@
 <?php
-namespace common\models;
+namespace backend\models;
 
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\helpers\ArrayHelper;
 use yii\web\IdentityInterface;
 
 /**
@@ -26,7 +27,10 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 10;
 
+    const ROLE_ADMIN = 'admin';
+    const ROLE_MODERATOR = 'moderator';
 
+    public $roles;
     /**
      * {@inheritdoc}
      */
@@ -53,7 +57,37 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            ['roles', 'safe'],
         ];
+    }
+
+    public function __construct(array $config = [])
+    {
+        $this->on(self::EVENT_AFTER_UPDATE, [$this, 'saveRoles']);
+    }
+
+    public function saveRoles()
+    {
+        Yii::$app->authManager->revokeAll($this->getId()); // удаляємо старі ролі перед збереженям нових
+
+        if (is_array($this->roles)) {
+            foreach ($this->roles as $roleName) {
+                if ($role = Yii::$app->authManager->getRole($roleName)) {
+                    Yii::$app->authManager->assign($role, $this->getId());
+                }
+            }
+        }
+    }
+
+    public function afterFind()
+    {
+        $this->roles = $this->getRoles();
+    }
+
+    public function getRoles()
+    {
+        $roles = Yii::$app->authManager->getRolesByUser($this->getId());
+        return ArrayHelper::getColumn($roles, 'name', false);
     }
 
     /**
@@ -78,9 +112,9 @@ class User extends ActiveRecord implements IdentityInterface
      * @param string $username
      * @return static|null
      */
-    public static function findByUsername($username)
+    public static function findByEmail($email)
     {
-        return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+        return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
     }
 
     /**
@@ -186,4 +220,21 @@ class User extends ActiveRecord implements IdentityInterface
     {
         $this->password_reset_token = null;
     }
+
+    public function getImage()
+    {
+        if ($this->picture) {
+            return Yii::$app->storage->getFile($this->picture);
+        }
+    }
+
+    public function getRolesDropdown()
+    {
+        return [
+            self::ROLE_ADMIN => 'Admin',
+            self::ROLE_MODERATOR => 'Moderator',
+        ];
+    }
+
+
 }

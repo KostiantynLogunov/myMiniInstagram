@@ -9,8 +9,10 @@ use yii\bootstrap\NavBar;
 use yii\widgets\Breadcrumbs;
 use frontend\assets\AppAsset;
 use common\widgets\Alert;
+use frontend\assets\FontAwesomeAsset;
 
 AppAsset::register($this);
+FontAwesomeAsset::register($this);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -26,24 +28,6 @@ AppAsset::register($this);
 <body>
 <?php $this->beginBody() ?>
 
-<!--<script>
-    window.fbAsyncInit = function() {
-        FB.init({
-            appId      : '1600725620040405',
-            xfbml      : true,
-            version    : 'v2.12'
-        });
-        FB.AppEvents.logPageView();
-    };
-
-    (function(d, s, id){
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
-        js.src = "https://connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-</script>-->
 <div class="wrap">
     <?php
     NavBar::begin([
@@ -53,19 +37,30 @@ AppAsset::register($this);
             'class' => 'navbar-inverse navbar-fixed-top',
         ],
     ]);
+
+
+
     $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
-        ['label' => 'About', 'url' => ['/site/about']],
-        ['label' => 'Contact', 'url' => ['/site/contact']],
+        ['label' => Yii::t('menu', 'Home'), 'url' => ['/site/index']],
     ];
+    $menuItems[] = '<li>'
+        .Html::beginForm(['/site/language'])
+        .Html::dropDownList('language', Yii::$app->language, ['en-US'=>'English', 'ru-RU'=>'Русский'])
+        .Html::submitButton('Change')
+        .Html::endForm()
+        .'</li>';
     if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Signup', 'url' => ['/site/signup']];
-        $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];
+
+        $menuItems[] = ['label' => Yii::t('menu', 'Signup'), 'url' => ['/user/default/signup']];
+        $menuItems[] = ['label' => Yii::t('menu', 'Login'), 'url' => ['/user/default/login']];
     } else {
+        $menuItems[] = ['label' => Yii::t('menu', 'My Profile'), 'url' => ['/profile/'.Yii::$app->user->identity->id]];
+        $menuItems[] = ['label' => Yii::t('menu', 'Create Post'), 'url' => ['/post/default/create']];
         $menuItems[] = '<li>'
-            . Html::beginForm(['/site/logout'], 'post')
+            . Html::beginForm(['/user/default/logout'], 'post')
             . Html::submitButton(
-                'Logout (' . Yii::$app->user->identity->username . ')',
+                Yii::t('menu','Logout ({username})', [
+                        'username'=> Yii::$app->user->identity->username ]),
                 ['class' => 'btn btn-link logout']
             )
             . Html::endForm()

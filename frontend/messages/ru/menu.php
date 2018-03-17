@@ -1,7 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Kostiantyn
- * Date: 16.03.2018
- * Time: 17:51
- */
+return [
+    'Signup' => 'Реєсртрація',
+    'Login' => 'Вхід',
+    'My Profile' => 'Мій профіль',
+    'Create Post' => 'Дoдати текст',
+    'Home' => 'Стрічка новин',
+    'Logout ({username})' => 'Вихід ({username})',
+];

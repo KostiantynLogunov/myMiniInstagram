@@ -20,14 +20,14 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-lg-5">
             <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
 
-                <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+                <?= $form->field($model, 'email')->textInput(['autofocus' => true]) ?>
 
                 <?= $form->field($model, 'password')->passwordInput() ?>
 
                 <?= $form->field($model, 'rememberMe')->checkbox() ?>
 
                 <div style="color:#999;margin:1em 0">
-                    If you forgot your password you can <?= Html::a('reset it', ['site/request-password-reset']) ?>.
+                    If you forgot your password you can <?= Html::a('reset it', ['/user/default/request-password-reset']) ?>.
                 </div>
 
                 <div class="form-group">
@@ -39,15 +39,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-lg-5">
             <h3>Login with facebook</h3>
             <?= yii\authclient\widgets\AuthChoice::widget([
-                'baseAuthUrl' => ['site/auth'],
+                'baseAuthUrl' => ['/user/default/auth'],
                 'popupMode' => false,
             ]) ?>
-            <!--<div
-                    class="fb-like"
-                    data-share="true"
-                    data-width="450"
-                    data-show-faces="true">
-            </div>-->
         </div>
     </div>
 </div>

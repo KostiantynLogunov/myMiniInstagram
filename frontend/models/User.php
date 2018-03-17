@@ -19,6 +19,10 @@ use yii\web\IdentityInterface;
  * @property integer $status
  * @property integer $created_at
  * @property integer $updated_at
+ * @property text about
+ * @property integer $type
+ * @property string $nickname
+ * @property string $picture
  * @property string $password write-only password
  */
 class User extends ActiveRecord implements IdentityInterface
@@ -26,7 +30,7 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 10;
 
-
+    const DEFAULT_IMAGE = '/img/profile_default_image.jpg';
     /**
      * {@inheritdoc}
      */
@@ -81,6 +85,10 @@ class User extends ActiveRecord implements IdentityInterface
     public static function findByUsername($username)
     {
         return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+    }
+    public static function findByEmail($email)
+    {
+        return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
     }
 
     /**
@@ -185,5 +193,104 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;
+    }
+
+    /**
+     * @return int|string
+     */
+    public function getNickname()
+    {
+        return ($this->nickname) ? $this->nickname : $this->id;
+    }
+
+    /**
+     * @param $user
+     */
+    public function followUser(User $user)
+    {
+        $k1 = "user:{$this->getId()}:subscriptions";//Alex
+        $k2 = "user:{$user->getId()}:followers";//Oliver
+
+        /** @var $redis Connection */
+        $redis = Yii::$app->redis;
+        $redis->sadd($k1, $user->getId());
+        $redis->sadd($k2, $this->getId());
+    }
+
+    public function unfollowUser(User $user)
+    {
+        $k1 = "user:{$this->getId()}:subscriptions";//Alex
+        $k2 = "user:{$user->getId()}:followers";//Oliver
+
+        /** @var $redis Connection */
+        $redis = Yii::$app->redis;
+        $redis->srem($k1, $user->getId());
+        $redis->srem($k2, $this->getId());
+    }
+
+    public function getSubscriptions()
+    {
+        $redis = Yii::$app->redis;
+        $key = "user:{$this->getId()}:subscriptions";
+        $ids = $redis->smembers($key);
+        return User::find()->select('id, username, nickname')->where(['id'=>$ids])->orderBy('username')->asArray()->all();
+    }
+
+    public function getFollowers()
+    {
+        $redis = Yii::$app->redis;
+        $key = "user:{$this->getId()}:followers";
+        $ids = $redis->smembers($key);
+        return User::find()->select('id, username, nickname')->where(['id'=>$ids])->orderBy('username')->asArray()->all();
+    }
+
+    public function countFollowers()
+    {
+        /** @var $redis Connection */
+        $redis = Yii::$app->redis;
+        return $redis->scard("user:{$this->getId()}:followers");
+    }
+
+    public function countSubscriptions()
+    {
+        /** @var $redis Connection */
+        $redis = Yii::$app->redis;
+        return $redis->scard("user:{$this->getId()}:subscriptions");
+    }
+
+    public function getMutualSubscriptionTo(User $user)
+    {
+        //Current user subscriptions
+        $key1 = "user:{$this->getId()}:subscriptions";
+        //Given user followers
+        $key2 = "user:{$user->getId()}:followers";
+
+        /** @var $redis Connection */
+        $redis = Yii::$app->redis;
+
+        $ids = $redis->sinter($key1, $key2);
+
+        return User::find()->select('id, username, nickname')->where(['id'=>$ids])->orderBy('username')->asArray()->all();
+    }
+
+    public function getPicture()
+    {
+        if ($this->picture) {
+            return Yii::$app->storage->getFile($this->picture);
+        }
+        return self::DEFAULT_IMAGE;
+    }
+
+    public function getFeed(int $limit)
+    {
+        $order = ['post_created_at' => SORT_DESC];
+        return $this->hasMany(Feed::className(), ['user_id'=>'id'])->orderBy($order)->limit($limit)->all();
+    }
+
+    public function likesPost(int $postId)
+    {
+        /** @var $redis Connection */
+        $redis = Yii::$app->redis;
+        return (bool) $redis->sismember("user:{$this->getId()}:likes", $postId);
     }
 }

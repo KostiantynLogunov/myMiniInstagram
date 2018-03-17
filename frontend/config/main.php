@@ -9,8 +9,18 @@ $params = array_merge(
 return [
     'id' => 'app-frontend',
     'basePath' => dirname(__DIR__),
+    'language' => 'ru-RU',
     'bootstrap' => ['log'],
     'controllerNamespace' => 'frontend\controllers',
+    'modules' => [
+        'user' => [
+            'class' => 'frontend\modules\user\module',
+        ],
+        'post' => [
+            'class' => 'frontend\modules\post\Module',
+        ],
+
+    ],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-frontend',
@@ -41,9 +51,22 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'profile/<nickname:\w+>' => 'user/profile/view',
+                'post/<id:\d+>' =>'post/default/view'
             ],
         ],
 
+        'feedService' => [
+            'class' => 'frontend\components\FeedService',
+        ],
+
+        'i18n' => [
+          'translations' => [
+              '*' => [
+                  'class' => 'yii\i18n\PhpMessageSource',
+              ],
+          ],
+        ],
     ],
     'params' => $params,
 ];

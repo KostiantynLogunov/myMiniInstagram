@@ -1,8 +1,9 @@
 <?php
 
-namespace frontend\models;
+namespace frontend\modules\user\models;
 
-use Yii;
+use frontend\models\User;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "auth".
@@ -14,7 +15,7 @@ use Yii;
  *
  * @property User $user
  */
-class Auth extends \yii\db\ActiveRecord
+class Auth extends ActiveRecord
 {
     /**
      * @inheritdoc
